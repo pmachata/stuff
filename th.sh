@@ -1,9 +1,8 @@
-lib_dir=$(dirname $0)/../../../net/forwarding
-
 if [[ $# -lt 2 ]]; then
 	echo "Usage: $(basename $0) <if> <counter> <counter> ... <if2> ..."
 	echo " counters measures traffic in bytes, use B: to toggle"
 	echo " packet counters measures traffic in packets, use P: to toggle"
+	echo " us counters measures traffic in microseconds use uS: to toggle"
 	echo " gauges measure usage in bytes, use G: to toggle"
 	echo " default type is byte counters"
 	echo " default sleep between measurements is 1s. Use -s <time> to change"
@@ -27,6 +26,9 @@ while [[ $# -gt 0 ]]; do
     elif [[ $arg == "P:" ]]; then
 	type=P
 	continue
+    elif [[ $arg == "uS:" ]]; then
+	type=uS
+	continue
     elif [[ $arg == "-s" ]]; then
 	sleep=$1; shift
 	continue
@@ -43,20 +45,13 @@ while [[ $# -gt 0 ]]; do
     COUNTERS[${#COUNTERS[@]}]="type=$type if=$if counter=$arg"
 done
 
-ethtool_stats_get()
-{
-	local dev=$1; shift
-	local stat=$1; shift
-
-	ethtool -S $dev | grep "^ *$stat:" | head -n 1 | cut -d: -f2
-}
-
 humanize()
 {
 	local value=$1; shift
 	local suffix=$1; shift
+	local -a prefix=("$@")
 
-	for unit in "" K M G; do
+	for unit in "${prefix[@]}" "" K M G; do
 		if (($(echo "$value < 1024" | bc))); then
 			break
 		fi
@@ -76,17 +71,31 @@ rate()
 	echo "($t1 - $t0) / $interval" | bc
 }
 
+ethtool_stats_get()
+{
+	local dev=$1; shift
+	local stat=$1; shift
+
+	ethtool -S $dev | grep "^ *$stat:" | head -n 1 | cut -d: -f2
+}
+
 declare -a VALS
 collect()
 {
 	orig_time=$time
 	time=$(date "+%s.%N") # Nanoseconds are reported with leading zeros
+	local last_if
+	local ethout
 
 	for ((i=0; i< ${#COUNTERS[@]}; ++i)); do
 		eval ${COUNTERS[$i]}
 		eval ${VALS[$i]}
+		if [[ $if != $last_if ]]; then
+			ethout=$(ethtool -S $if)
+		fi
 		orig=$((val))
-		val=$(($(ethtool_stats_get $if $counter)))
+		val=$(($(echo "$ethout" | grep "^ *$counter" \
+			      | head -n 1 | cut -d: -f2)))
 		VALS[$i]="orig=$orig val=$val"
 	done
 }
@@ -114,6 +123,9 @@ while true; do
 	    elif [[ $type == P ]]; then
 		    rate=$(rate $orig $val $interval)
 		    echo -e "$if $counter\t\033[K$(humanize $rate pps)"
+	    elif [[ $type == uS ]]; then
+		    rate=$(rate $orig $val $interval)
+		    echo -e "$if $counter\t\033[K$(humanize $rate s/s u m)"
 	    elif [[ $type == G ]]; then
 		    echo -e "$if $counter\t\033[K$(humanize $val B)"
 	    else
