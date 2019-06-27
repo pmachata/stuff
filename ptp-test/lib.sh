@@ -1,9 +1,23 @@
+: ${TEAMD:=teamd}
+
+require_command()
+{
+	local cmd=$1; shift
+
+	if [[ ! -x "$(command -v "$cmd")" ]]; then
+		echo "SKIP: $cmd not installed"
+		exit 1
+	fi
+}
+
 declare -a CLEANUPS
 
 on_exit()
 {
-    for c in "${CLEANUPS[@]}"; do
-        eval "$c"
+    local i
+
+    for ((i=${#CLEANUPS[@]}; i > 0; i--)); do
+        ${CLEANUPS[$((i - 1))]}
     done
 }
 
@@ -119,12 +133,66 @@ if_set_speed()
     push_cleanup ethtool -s "$ifname" autoneg on
 }
 
+team_create()
+{
+	local if_name=$1; shift
+	local mode=$1; shift
+
+	require_command $TEAMD
+	$TEAMD -t $if_name -d -c '{"runner": {"name": "'$mode'"}}'
+	for slave in "$@"; do
+		ip link set dev $slave down
+		ip link set dev $slave master $if_name
+		ip link set dev $slave up
+	done
+	ip link set dev $if_name up
+}
+
+team_destroy()
+{
+	local if_name=$1; shift
+
+	$TEAMD -t $if_name -k
+}
+
+use_team()
+{
+    local if_name=$1; shift
+    local mode=$1; shift
+
+    team_create "$if_name" "$mode" "$@"
+    push_cleanup team_destroy "$if_name"
+}
+
+__addr_add_del()
+{
+	local if_name=$1
+	local add_del=$2
+	local array
+
+	shift
+	shift
+	array=("${@}")
+
+	for addrstr in "${array[@]}"; do
+		ip address $add_del $addrstr dev $if_name
+	done
+}
+
+use_addr()
+{
+    local if_name=$1; shift
+
+    __addr_add_del "$if_name" add "$@"
+    push_cleanup __addr_add_del "$if_name" del "$@"
+}
+
 common_config()
 {
     INICONF=$(mktemp)
     push_cleanup rm -v $INICONF
 
-    crudini --set $INICONF global logSyncInterval -11
+    crudini --set $INICONF global logSyncInterval 0
     crudini --set $INICONF global step_threshold 1.0
     crudini --set $INICONF global network_transport $TRANSPORT
     crudini --set $INICONF global tx_timestamp_timeout 10
@@ -142,7 +210,7 @@ runptp()
     done
 
     ptpify <$INICONF >$conf
-    #cat $conf
+    cat $conf
 
     $PTP4L -f $conf -H -m
 }
