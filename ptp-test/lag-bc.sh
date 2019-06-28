@@ -6,12 +6,10 @@ echo M1=$M1
 echo S1=$S1
 echo S2=$S2
 
-if false; then
-    speed=1000
-    if_set_speed $M1 $speed
-    if_set_speed $S1 $speed
-    if_set_speed $S2 $speed
-fi
+speed=10000
+if_set_speed $M1 $speed
+if_set_speed $S1 $speed
+if_set_speed $S2 $speed
 
 common_config
 crudini --set $INICONF global tx_timestamp_timeout 10

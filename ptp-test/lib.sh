@@ -164,6 +164,33 @@ use_team()
     push_cleanup team_destroy "$if_name"
 }
 
+use_bridge()
+{
+    local if_name=$1; shift
+
+    ip link add name "$if_name" up type bridge "$@"
+    push_cleanup ip link del dev "$if_name"
+}
+
+use_slave()
+{
+    local master_name=$1; shift
+    local slave_name=$1; shift
+
+    ip link set dev "$slave_name" master "$master_name"
+    push_cleanup ip link set dev "$slave_name" nomaster
+}
+
+use_vlan()
+{
+    local lower_name=$1; shift
+    local vid=$1; shift
+
+    ip link add name "$lower_name.$vid" \
+       link "$lower_name" up type vlan id "$vid"
+    push_cleanup ip link del dev "$lower_name.$vid"
+}
+
 __addr_add_del()
 {
 	local if_name=$1
