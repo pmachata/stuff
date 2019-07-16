@@ -45,4 +45,4 @@ bridge vlan add dev br vid 222 self
 bridge vlan add dev $S1 vid 111
 bridge vlan add dev $S2 vid 222 pvid untagged
 
-runptp $M1 $S1 $S2
+runptp $M1
