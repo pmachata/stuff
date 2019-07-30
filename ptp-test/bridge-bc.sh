@@ -14,16 +14,25 @@ if_set_speed $S2 $speed
 common_config
 crudini --set $INICONF global tx_timestamp_timeout 10
 crudini --set $INICONF global masterOnly 0
-crudini --set $INICONF $M1 network_transport UDPv4
+crudini --set $INICONF $M1 network_transport $TRANSPORT
 
-crudini --set $INICONF $S1@111 network_transport RAWUDPv4
+crudini --set $INICONF $S1@111 network_transport RAW$TRANSPORT
 crudini --set $INICONF $S1@111 vlan 111
 crudini --set $INICONF $S1@111 vlan_intf br
-crudini --set $INICONF $S1@111 src_ip 192.0.2.17
 
-crudini --set $INICONF $S2@222 network_transport RAWUDPv4
+crudini --set $INICONF $S2@222 network_transport RAW$TRANSPORT
 crudini --set $INICONF $S2@222 vlan_intf br.222
-crudini --set $INICONF $S2@222 src_ip 192.0.2.33
+
+if [ ${TRANSPORT^^} = UDPV4 ]; then
+    crudini --set $INICONF $S1@111 src_ip 192.0.2.17
+    crudini --set $INICONF $S2@222 src_ip 192.0.2.33
+elif [ ${TRANSPORT^^} = UDPV6 ]; then
+    crudini --set $INICONF $S1@111 src_ip 2001:db8:2::1
+    crudini --set $INICONF $S2@222 src_ip 2001:db8:3::1
+else
+    echo "Invalid transport: $TRANSPORT"
+    exit 1
+fi
 
 use_if $M1 192.0.2.2/28 2001:db8:1::2/64
 use_if $S1

@@ -9,6 +9,9 @@ echo S2=$S2
 common_config
 crudini --set $INICONF global tx_timestamp_timeout 10
 crudini --set $INICONF global masterOnly 0
+# crudini --set $INICONF $M1 udp6_scope 0x02
+# crudini --set $INICONF $S1 udp6_scope 0x04
+# crudini --set $INICONF $S2 udp6_scope 0x08
 
 speed=1000
 if_set_speed $M1 $speed
