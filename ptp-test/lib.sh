@@ -226,10 +226,13 @@ common_config()
     push_cleanup rm -v $INICONF
 
     crudini --set $INICONF global logSyncInterval 0
+    crudini --set $INICONF global logMinDelayReqInterval 0
+    crudini --set $INICONF global delay_mechanism e2e
     crudini --set $INICONF global step_threshold 1.0
     crudini --set $INICONF global network_transport $TRANSPORT
     crudini --set $INICONF global tx_timestamp_timeout 10
     crudini --set $INICONF global summary_interval 2
+    crudini --set $INICONF global hybrid_e2e $HYBRID_E2E
 }
 
 runptp()

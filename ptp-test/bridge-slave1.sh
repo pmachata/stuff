@@ -14,7 +14,7 @@ crudini --set $INICONF global slaveOnly 1
 if [ ${TRANSPORT^^} = RAWUDPV4 ]; then
     crudini --set $INICONF $S1 src_ip ${IPV4/\/*}
 elif [ ${TRANSPORT^^} = RAWUDPV6 ]; then
-    crudini --set $INICONF $S2 src_ip ${IPV6/\/*}
+    crudini --set $INICONF $S1 src_ip ${IPV6/\/*}
 fi
 
 use_if $S1

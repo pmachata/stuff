@@ -41,12 +41,9 @@ use_if $S1
 use_if $S2
 
 use_bridge br vlan_filtering 1
-use_addr br 192.0.2.17/28 2001:db8:2::1/64
 use_slave br $S1
 use_slave br $S2
-
 use_vlan br 222
-use_addr br.222 192.0.2.33/28 2001:db8:3::1/64
 
 bridge vlan del dev br vid 1 self
 bridge vlan del dev $S1 vid 1
@@ -55,5 +52,8 @@ bridge vlan add dev br vid 111 self pvid untagged
 bridge vlan add dev br vid 222 self
 bridge vlan add dev $S1 vid 111
 bridge vlan add dev $S2 vid 222 pvid untagged
+
+use_addr br.222 192.0.2.33/28 2001:db8:3::1/64
+use_addr br 192.0.2.17/28 2001:db8:2::1/64
 
 runptp $M1
