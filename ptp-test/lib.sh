@@ -40,7 +40,7 @@ help()
     echo "   TRANSPORT sets the transport mode"
 }
 
-check_args()
+__check_args()
 {
     local -a vars
 
@@ -65,9 +65,15 @@ check_args()
         printf -v $var "%s" "$1"
         shift
     done
+}
+
+check_args()
+{
+    __check_args "$@"
 
     echo TRANSPORT=${TRANSPORT:=UDPv4}
     echo PTP4L=${PTP4L:=ptp4l}
+    echo HYBRID_E2E=${HYBRID_E2E:=0}
 }
 
 inify()
@@ -240,4 +246,11 @@ runptp()
     cat $conf
 
     $PTP4L -f $conf -H -m
+}
+
+list_uniq()
+{
+    for S in "$@"; do
+        echo $S
+    done | sort -u
 }
