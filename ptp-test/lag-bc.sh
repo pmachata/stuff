@@ -14,6 +14,7 @@ if_set_speed $S2 $speed
 common_config
 crudini --set $INICONF global tx_timestamp_timeout 10
 crudini --set $INICONF global masterOnly 0
+crudini --set $INICONF global userDescription "LAG boundary clock"
 crudini --set $INICONF $M1 network_transport UDPv4
 for S in $S1 $S2; do
     crudini --set $INICONF $S network_transport RAWUDPv4

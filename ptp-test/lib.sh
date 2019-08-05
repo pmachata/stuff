@@ -77,7 +77,7 @@ inify()
 
 ptpify()
 {
-    awk '/^[#[]/{print;next} {print $1" "$3}'
+    awk '/^[#[]/{print;next} {$2=""; print $0}'
 }
 
 set_config()

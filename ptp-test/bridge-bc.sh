@@ -14,6 +14,8 @@ if_set_speed $S2 $speed
 common_config
 crudini --set $INICONF global tx_timestamp_timeout 10
 crudini --set $INICONF global masterOnly 0
+crudini --set $INICONF global userDescription "bridge boundary clock"
+
 crudini --set $INICONF $M1 network_transport $TRANSPORT
 
 crudini --set $INICONF $S1@111 network_transport RAW$TRANSPORT

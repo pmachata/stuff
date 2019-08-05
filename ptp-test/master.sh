@@ -6,6 +6,7 @@ extra_config()
 {
     crudini --set $INICONF global masterOnly 1
     # crudini --set $INICONF "$1" udp6_scope 0x08
+    crudini --set $INICONF global userDescription "master clock;$1"
 
     if [ ${TRANSPORT^^} = RAWUDPV4 ]; then
         crudini --set $INICONF $1 src_ip ${IPV4/\/*}
