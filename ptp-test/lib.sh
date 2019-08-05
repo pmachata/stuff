@@ -74,6 +74,7 @@ check_args()
     echo TRANSPORT=${TRANSPORT:=UDPv4}
     echo PTP4L=${PTP4L:=ptp4l}
     echo HYBRID_E2E=${HYBRID_E2E:=0}
+    echo TTL=${TTL:=1}
 }
 
 inify()
@@ -232,6 +233,7 @@ common_config()
     crudini --set $INICONF global network_transport $TRANSPORT
     crudini --set $INICONF global tx_timestamp_timeout 10
     crudini --set $INICONF global summary_interval 2
+    crudini --set $INICONF global udp_ttl $TTL
     crudini --set $INICONF global hybrid_e2e $HYBRID_E2E
 }
 
