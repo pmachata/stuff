@@ -56,4 +56,4 @@ bridge vlan add dev $S2 vid 222 pvid untagged
 use_addr br.222 192.0.2.33/28 2001:db8:3::1/64
 use_addr br 192.0.2.17/28 2001:db8:2::1/64
 
-runptp $M1
+runptp
