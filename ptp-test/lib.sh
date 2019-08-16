@@ -235,6 +235,7 @@ common_config()
     crudini --set $INICONF global tx_timestamp_timeout 10
     crudini --set $INICONF global udp_ttl $TTL
     crudini --set $INICONF global hybrid_e2e $HYBRID_E2E
+    crudini --set $INICONF global time_stamping hardware
 }
 
 runptp()
