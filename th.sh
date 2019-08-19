@@ -6,7 +6,17 @@ if [[ $# -lt 2 ]]; then
 	echo " gauges measure usage in bytes, use G: to toggle"
 	echo " default type is byte counters"
 	echo " default sleep between measurements is 1s. Use -s <time> to change"
-	echo "e.g.: $(basename $0) sw1p6 rx_octets_prio_1 sw1p7 rx_octets_prio_2 sw1p10 rx_octets_prio_1 rx_octets_prio_2 G: sw1p9 tc_transmit_queue_tc_1 tc_transmit_queue_tc_2"
+	echo
+	echo " by default, <counter> is an ethtool counter, but it can be prefixed"
+	echo "  with FAMILY/ like so:"
+	echo "    - ETH/name -- name of the counter in ethtool output"
+	echo "    - IPL/jqpath -- path inside stats64 object to get a counter"
+	echo "      in the output of ip -s -j link show dev <if>"
+        echo "    - ING/jqpath -- path inside stats object to get a counter"
+	echo "      in the output of tc -s -j flow show dev <if> ingress"
+        echo "    - EGR/jqpath -- likewise for egress"
+	echo
+	echo "e.g.: $(basename $0) sw1p6 rx_octets_prio_1 sw1p7 rx_octets_prio_2 sw1p10 rx_octets_prio_1 rx_octets_prio_2 G: sw1p9 tc_transmit_queue_tc_1 tc_transmit_queue_tc_2 IPL/tx.bytes ING/actions[0].stats.bytes"
 	exit 1
 fi
 
@@ -91,11 +101,43 @@ collect()
 		eval ${COUNTERS[$i]}
 		eval ${VALS[$i]}
 		if [[ $if != $last_if ]]; then
-			ethout=$(ethtool -S $if)
+			case "$counter" in
+			IPL/*)
+				ethout=$(ip -s -j l sh dev $if)
+				;;
+			ING/*)
+				ethout=$(tc -j -s f sh dev $if ingress)
+				;;
+			EGR/*)
+				ethout=$(tc -j -s f sh dev $if egress)
+				;;
+			ETH/*)
+				ethout=$(ethtool -S $if)
+				;;
+			*/*)
+				echo "Invalid counter family in $counter" >/dev/stderr
+				exit 1
+				;;
+			*)
+				ethout=$(ethtool -S $if)
+				;;
+			esac
 		fi
 		orig=$((val))
-		val=$(($(echo "$ethout" | grep "^ *$counter" \
-			      | head -n 1 | cut -d: -f2)))
+		case "$counter" in
+			IPL/*)
+				val=$(($(echo "$ethout" | \
+					jq ".[].stats64.${counter#IPL/}")))
+				;;
+			ING/* | EGR/*)
+				val=$(($(echo "$ethout" | \
+					 jq ".[1].options.${counter#*/}")))
+				;;
+			*)
+				val=$(($(echo "$ethout" | grep "^ *$counter" \
+					| head -n 1 | cut -d: -f2)))
+				;;
+		esac
 		VALS[$i]="orig=$orig val=$val"
 	done
 }
