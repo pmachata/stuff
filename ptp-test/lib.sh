@@ -251,7 +251,7 @@ runptp()
     ptpify <$INICONF >$conf
     cat $conf
 
-    $PTP4L -f $conf -H -m
+    $PTP4L -f $conf -m
 }
 
 list_uniq()
