@@ -13,6 +13,8 @@ crudini --set $INICONF global masterOnly 0
 # crudini --set $INICONF $S1 udp6_scope 0x04
 # crudini --set $INICONF $S2 udp6_scope 0x08
 crudini --set $INICONF global userDescription "physical boundary clock"
+# crudini --set $INICONF global dscp_event 18
+# crudini --set $INICONF global dscp_general 36
 
 speed=1000
 if_set_speed $M1 $speed

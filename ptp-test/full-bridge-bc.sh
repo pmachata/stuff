@@ -16,7 +16,7 @@ crudini --set $INICONF global tx_timestamp_timeout 10
 crudini --set $INICONF global masterOnly 0
 crudini --set $INICONF global userDescription "bridge boundary clock"
 #crudini --set $INICONF global dscp_event 8
-crudini --set $INICONF global dscp_general 18
+#crudini --set $INICONF global dscp_general 18
 
 crudini --set $INICONF $M1@333 network_transport RAW$TRANSPORT
 crudini --set $INICONF $M1@333 vlan_intf br

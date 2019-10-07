@@ -226,13 +226,15 @@ common_config()
     INICONF=$(mktemp)
     push_cleanup rm -v $INICONF
 
+    crudini --set $INICONF global announceReceiptTimeout 3
+    crudini --set $INICONF global logAnnounceInterval 0
     crudini --set $INICONF global logSyncInterval 0
     crudini --set $INICONF global logMinDelayReqInterval 0
     crudini --set $INICONF global summary_interval 0
     crudini --set $INICONF global delay_mechanism e2e
     crudini --set $INICONF global step_threshold 1.0
     crudini --set $INICONF global network_transport $TRANSPORT
-    crudini --set $INICONF global tx_timestamp_timeout 10
+    crudini --set $INICONF global tx_timestamp_timeout 30
     crudini --set $INICONF global udp_ttl $TTL
     crudini --set $INICONF global hybrid_e2e $HYBRID_E2E
     crudini --set $INICONF global time_stamping hardware
