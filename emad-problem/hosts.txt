@@ -1,0 +1,20 @@
+host1:
+  ip l s dev ens8 up mtu 9900
+  ip a a dev ens8 192.0.2.66/28
+  ip a a dev ens8 192.0.2.129/28
+  ip r a 192.0.2.16/28 via 192.0.2.65
+
+switch:
+  bash switch_config.sh
+
+host2:
+  ip l s dev ens8 up mtu 9900
+  ip a a dev ens8 192.0.2.17/28
+  ip r a 192.0.2.128/28 nexthop via 192.0.2.18
+  ping 192.0.2.129 # end-to-end should work
+  modprobe pktgen
+  bash pktgen_test_burst_single_flow.sh
+
+switch:
+  ping 192.0.2.129
+  # The ping will fail on broken FW, and should pass on a fixed FW.

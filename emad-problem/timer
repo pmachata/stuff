@@ -1,0 +1,5 @@
+T=$(cat ts || echo 0)
+NT=$(date +%s%N)
+D=$((NT - T))
+echo $D | sed 's/.\{9\}$/.&/'
+echo $NT > ts
