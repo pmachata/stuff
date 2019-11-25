@@ -198,6 +198,15 @@ use_vlan()
     push_cleanup ip link del dev "$lower_name.$vid"
 }
 
+use_vrf()
+{
+    local if_name=$1; shift
+    local table=$1; shift
+
+    ip link add name "$if_name" up type vrf table "$table"
+    push_cleanup ip link del dev "$if_name"
+}
+
 __addr_add_del()
 {
 	local if_name=$1
