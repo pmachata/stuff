@@ -9,6 +9,7 @@ if [[ $# -lt 2 ]]; then
         echo "    - ING/jqpath -- path inside stats object to get a counter"
 	echo "      in the output of tc -s -j flow show dev <if> ingress"
         echo "    - EGR/jqpath -- likewise for egress"
+        echo "    - T/ -- current time in nanoseconds"
         echo
         echo " - flags change the way that following counters will be shown"
         echo "   P: the counter is in packets (that's the default)"
@@ -16,6 +17,7 @@ if [[ $# -lt 2 ]]; then
         echo "   1: the counter is unitless"
         echo "   Bb: the counter is bytes, but show it in bits"
         echo "   uS: the counter is in microseconds"
+        echo "   uS: the counter is in naneseconds"
         echo
         echo "   N: the value is shown as-is"
         echo "   T: counter baseline value is updated on every tick"
@@ -37,6 +39,7 @@ type=P
 update=tick
 sleep=1
 kind=relative
+should_humanize=yes
 if=
 while [[ $# -gt 0 ]]; do
     arg=$1; shift
@@ -58,6 +61,12 @@ while [[ $# -gt 0 ]]; do
     elif [[ $arg == "B:" ]]; then
 	type=B
 	continue
+    elif [[ $arg == "H:" ]]; then
+        should_humanize=yes
+	continue
+    elif [[ $arg == "nH:" ]]; then
+        should_humanize=no
+	continue
     elif [[ $arg == "P:" ]]; then
 	type=P
 	continue
@@ -66,6 +75,9 @@ while [[ $# -gt 0 ]]; do
 	continue
     elif [[ $arg == "uS:" ]]; then
 	type=uS
+	continue
+    elif [[ $arg == "nS:" ]]; then
+	type=nS
 	continue
     elif [[ $arg == "-s" ]]; then
 	sleep=$1; shift
@@ -81,7 +93,8 @@ while [[ $# -gt 0 ]]; do
 
     counter=$arg
     COUNTERS[${#COUNTERS[@]}]="type=$type update=$update \
-                               kind=$kind if=$if counter=$arg"
+                               kind=$kind if=$if counter=$arg \
+			       should_humanize=$should_humanize"
 done
 
 humanize()
@@ -145,6 +158,9 @@ collect()
 			ETH/*)
 				ethout=$(ethtool -S $if)
 				;;
+			T/*)
+				ethout="$time"
+				;;
 			*/*)
 				echo "Invalid counter family in $counter" >/dev/stderr
 				exit 1
@@ -167,6 +183,9 @@ collect()
 			ING/* | EGR/*)
 				val=$(($(echo "$ethout" | \
 					 jq ".[1].options.${counter#*/}")))
+				;;
+			T/*)
+				val=$(echo "$ethout" | tr -d .)
 				;;
 			*)
 				val=$(($(echo "$ethout" | grep "^ *$counter" \
@@ -216,9 +235,17 @@ while true; do
                 B)  unit="B$unit";;
                 P)  unit="p$unit";;
                 uS) unit="s$unit u m";;
+                nS) unit="s$unit n u m";;
             esac
 
-            echo -e "$if $counter\t\033[K$(humanize $show $unit)"
+	    if [[ $should_humanize == "yes" ]]; then
+		    show=$(humanize $show $unit)
+	    elif [[ $should_humanize != "no" ]]; then
+		    echo WTF
+		    exit 1
+	    fi
+
+            echo -e "$if $counter\t\033[K$show"
 	    N=$((N + 1))
 	done
 
